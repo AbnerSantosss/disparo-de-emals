@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  mailforge-app:
+    build: .
+    container_name: mailforge_app
+    ports:
+      - "8096:3000" # Porta Única (Externa 8096 -> Interna 3000)
+    networks:
+      - mailforge_net
+    volumes:
+      # Volume para persistir o banco de dados (dados não somem ao reiniciar)
+      - mailforge_data:/app/data
+    environment:
+      - NODE_ENV=production
+      - DB_PATH=/app/data/mailforge.db # Aponta o SQLite para a pasta do volume
+    restart: unless-stopped
+
+networks:
+  mailforge_net:
+    driver: bridge # Rede Interna para comunicação
+
+volumes:
+  mailforge_data:
+    name: mailforge_data # Volumes gerenciados pelo Portainer

@@ -1,0 +1,6 @@
+node_modules/
+mailforge.db
+mailforge.db-shm
+mailforge.db-wal
+.env
+.DS_Store

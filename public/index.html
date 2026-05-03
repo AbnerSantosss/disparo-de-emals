@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MailForge — HTML Email Tester</title>
+  <meta name="description" content="Teste e visualize templates de e-mail HTML antes de enviar." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ═══════════ SMTP CONFIG MODAL ═══════════ -->
+  <div id="smtp-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </div>
+        <h2>Configuração SMTP</h2>
+        <button id="modal-close" class="modal-close" aria-label="Fechar">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="smtp-email">E-mail Gmail</label>
+          <input type="email" id="smtp-email" placeholder="seuemail@gmail.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label for="smtp-password">Senha de App</label>
+          <div class="password-wrapper">
+            <input type="password" id="smtp-password" placeholder="xxxx xxxx xxxx xxxx" autocomplete="current-password" />
+            <button id="toggle-password" class="toggle-password" type="button" aria-label="Mostrar senha">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <div class="app-password-help">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span>Não tem a Senha de App?
+              <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer">Crie aqui no Google</a>
+            </span>
+          </div>
+          <div class="app-password-help" style="margin-top:4px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            <span>
+              <a href="https://support.google.com/accounts/answer/185833" target="_blank" rel="noopener noreferrer">Passo a passo completo (Google Support)</a>
+            </span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="smtp-subject">Assunto padrão do teste</label>
+          <input type="text" id="smtp-subject" placeholder="[TESTE] Meu Template de Email" />
+        </div>
+        <div class="modal-actions">
+          <button id="test-connection" class="btn btn-outline">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Testar Conexão
+          </button>
+          <button id="save-smtp" class="btn btn-primary">Salvar</button>
+        </div>
+        <div id="smtp-status" class="smtp-status hidden"></div>
+        <div class="db-persist-notice">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          <span>Suas credenciais ficam salvas localmente no banco de dados — não precisa digitar novamente.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ TOAST NOTIFICATIONS ═══════════ -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- ═══════════ MAIN LAYOUT ═══════════ -->
+  <div class="app-layout">
+
+    <!-- ──── SIDEBAR ──── -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="brand-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="url(#brand-gradient)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <defs><linearGradient id="brand-gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6C5CE7"/><stop offset="100%" stop-color="#00D2D3"/></linearGradient></defs>
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="brand-name">MailForge</h1>
+            <span class="brand-tag">Email Tester</span>
+          </div>
+        </div>
+        <button id="btn-settings" class="btn-icon" aria-label="Configurações SMTP" title="Configurações SMTP">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- SMTP status -->
+      <div id="connection-status" class="connection-badge disconnected">
+        <span class="status-dot"></span>
+        <span class="status-text">SMTP não configurado</span>
+      </div>
+
+      <!-- Contacts -->
+      <div class="sidebar-section">
+        <div class="section-header">
+          <h3>Destinatários</h3>
+          <span id="contact-count" class="badge">0</span>
+        </div>
+        <div class="add-contact">
+          <input type="email" id="new-email" placeholder="email@exemplo.com" />
+          <button id="btn-add-email" class="btn-icon btn-add" aria-label="Adicionar e-mail" title="Adicionar e-mail">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
+        <div class="contact-actions">
+          <button id="btn-select-all" class="btn-text">Selecionar todos</button>
+          <button id="btn-clear-contacts" class="btn-text btn-danger-text">Limpar lista</button>
+        </div>
+        <ul id="contact-list" class="contact-list"></ul>
+        <div id="empty-contacts" class="empty-state">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <p>Adicione e-mails para teste</p>
+        </div>
+      </div>
+
+      <!-- Send button -->
+      <div class="sidebar-footer">
+        <button id="btn-send" class="btn btn-send" disabled>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <span>Enviar Teste</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ──── MAIN CONTENT ──── -->
+    <main class="main-content">
+
+      <!-- Tabs -->
+      <div class="tabs-nav">
+        <button class="tab-btn active" data-tab="builder" id="tab-builder">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <span>Construtor</span>
+        </button>
+        <button class="tab-btn" data-tab="editor" id="tab-editor">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>Editor HTML</span>
+        </button>
+        <button class="tab-btn" data-tab="preview" id="tab-preview">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span>Preview</span>
+        </button>
+        <div class="tab-indicator"></div>
+      </div>
+
+      <!-- Tab: Builder -->
+      <div class="tab-panel active" id="panel-builder">
+        <div class="builder-container">
+          <div class="builder-header">
+            <h2>Construa seu Template</h2>
+            <p>Preencha de forma simples e guiada. O HTML pronto para disparo será gerado automaticamente.</p>
+          </div>
+          
+          <form id="builder-form" class="builder-form">
+            <!-- Branding -->
+            <div class="builder-section">
+              <h3>1. Cabeçalho & Marca</h3>
+              <div class="form-group">
+                <label for="builder-brand">Nome do Remetente / Título da Ação</label>
+                <input type="text" id="builder-brand" placeholder="Ex: Liderbet Promocional" required>
+              </div>
+
+              <!-- Logo Control -->
+              <div class="form-group toggle-group mt-3" style="display:flex; align-items:center; gap:10px;">
+                <label class="toggle-switch">
+                  <input type="checkbox" id="builder-has-logo" checked>
+                  <span class="slider"></span>
+                </label>
+                <span style="font-size:0.95rem; font-weight:500; color:var(--text-primary);">Adicionar Logo no Topo</span>
+              </div>
+
+              <div id="builder-logo-section">
+                <div class="form-group mt-3" style="display: flex; gap: 1rem; align-items: flex-end;">
+                  <div style="flex: 1;">
+                    <label for="builder-brand-select">Selecione a Marca</label>
+                    <select id="builder-brand-select" class="form-select">
+                      <option value="liderbet">Liderbet</option>
+                      <option value="geralbet">Geralbet</option>
+                      <option value="certeiro">Certeiro</option>
+                      <option value="logame">Logame</option>
+                      <option value="officecom">Officecom</option>
+                      <option value="outra">Outra Marca (Informar Link)</option>
+                    </select>
+                  </div>
+                  <div class="brand-preview-icon" style="width: 42px; height: 42px; border-radius: 6px; background: #27273a; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid var(--border-light); flex-shrink: 0;">
+                    <img id="builder-brand-icon" src="/images/logos/icon_liderbet_branco.png" alt="Icon" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                  </div>
+                </div>
+                <!-- This will be hidden by default using generic hidden class if "outra" is not selected -->
+                <div class="form-group mt-3" id="builder-logo-custom-group" style="display:none;">
+                  <label for="builder-logo-custom">Link da Logo (Outra Marca)</label>
+                  <input type="url" id="builder-logo-custom" placeholder="https://exemplo.com/logo.png">
+                </div>
+              </div>
+
+              <div class="form-group mt-3">
+                <label for="builder-banner">Link da Imagem do Banner Principal</label>
+                <input type="url" id="builder-banner" placeholder="https://exemplo.com/imagem.png" required>
+              </div>
+              <div class="form-group mt-3">
+                <label for="builder-link-banner">Link de Destino do Banner</label>
+                <input type="url" id="builder-link-banner" placeholder="https://seusite.com/promocao" required>
+              </div>
+            </div>
+
+            <!-- Copy -->
+            <div class="builder-section">
+              <h3>2. Conteúdo Principal (Copy)</h3>
+              <div class="form-group">
+                <label>Texto do E-mail</label>
+                <div class="rich-editor">
+                  <div class="rich-editor-toolbar">
+                    <button type="button" data-command="bold" title="Negrito"><b>B</b></button>
+                    <button type="button" data-command="italic" title="Itálico"><i>I</i></button>
+                    <button type="button" data-command="underline" title="Sublinhado"><u>U</u></button>
+                    <button type="button" data-command="strikeThrough" title="Tachado"><s>S</s></button>
+                    <div class="toolbar-divider"></div>
+                    <button type="button" data-command="insertUnorderedList" title="Lista"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
+                    <button type="button" data-command="insertOrderedList" title="Lista Numerada"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></button>
+                    <div class="toolbar-divider"></div>
+                    <button type="button" data-command="justifyLeft" title="Alinhar à Esquerda">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+                    </button>
+                    <button type="button" data-command="justifyCenter" title="Centralizar">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/></svg>
+                    </button>
+                    <button type="button" data-command="justifyRight" title="Alinhar à Direita">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg>
+                    </button>
+                  </div>
+                  <div id="builder-copy" class="rich-editor-content" contenteditable="true">
+                    Escreva aqui a sua copy... Você pode usar formatação em negrito, itálico e alinhar partes do texto.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botão -->
+            <div class="builder-section">
+              <h3>3. Call To Action (Botão)</h3>
+              <div class="form-row">
+                <div class="form-group half">
+                  <label for="builder-cta-text">Texto do Botão</label>
+                  <input type="text" id="builder-cta-text" placeholder="APOSTAR AGORA" required>
+                </div>
+                <div class="form-group half">
+                  <label for="builder-cta-link">Link do Botão</label>
+                  <input type="url" id="builder-cta-link" placeholder="https://seusite.com/apostar" required>
+                </div>
+              </div>
+            </div>
+
+            <!-- Redes Sociais & Cores -->
+            <div class="builder-section">
+              <h3>4. Rodapé & Estilos</h3>
+              <div class="form-row">
+                <div class="form-group half">
+                  <label for="builder-instagram">Link do Instagram</label>
+                  <input type="url" id="builder-instagram" placeholder="https://instagram.com/suamarca" value="https://instagram.com/">
+                </div>
+                <div class="form-group half">
+                  <label for="builder-facebook">Link do Facebook</label>
+                  <input type="url" id="builder-facebook" placeholder="https://facebook.com/suamarca" value="https://facebook.com/">
+                </div>
+              </div>
+              <div class="form-row mt-3">
+                <div class="form-group half">
+                  <label for="builder-color-bg">Cor de Fundo (Background)</label>
+                  <div class="color-picker-wrapper">
+                    <input type="color" id="builder-color-bg" value="#0a0a14">
+                    <span id="hex-bg" class="hex-value">#0a0a14</span>
+                  </div>
+                </div>
+                <div class="form-group half">
+                  <label for="builder-color-btn">Cor do Botão</label>
+                  <div class="color-picker-wrapper">
+                    <input type="color" id="builder-color-btn" value="#d01917">
+                    <span id="hex-btn" class="hex-value">#d01917</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="builder-actions">
+              <button type="submit" class="btn btn-primary btn-lg w-full">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                Gerar Template HTML Estável
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Tab: Editor -->
+      <div class="tab-panel" id="panel-editor">
+        <div class="editor-toolbar">
+          <div class="editor-info">
+            <span id="line-count" class="info-badge">0 linhas</span>
+            <span id="char-count" class="info-badge">0 caracteres</span>
+          </div>
+          <div class="editor-actions">
+            <button id="btn-paste" class="btn btn-sm btn-ghost" title="Colar do clipboard">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+              Colar
+            </button>
+            <button id="btn-copy" class="btn btn-sm btn-ghost" title="Copiar HTML">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copiar
+            </button>
+            <button id="btn-clear" class="btn btn-sm btn-ghost" title="Limpar editor">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              Limpar
+            </button>
+          </div>
+        </div>
+        <div class="editor-wrapper">
+          <div class="line-numbers" id="line-numbers"></div>
+          <textarea id="html-editor" class="html-editor" spellcheck="false" placeholder="<!-- Cole seu HTML de e-mail aqui -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='UTF-8'>
+</head>
+<body>
+  <h1>Seu template aqui</h1>
+</body>
+</html>"></textarea>
+        </div>
+      </div>
+
+      <!-- Tab: Preview -->
+      <div class="tab-panel" id="panel-preview">
+        <div class="preview-toolbar">
+          <div class="viewport-buttons">
+            <button class="viewport-btn active" data-viewport="desktop" title="Desktop (100%)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            </button>
+            <button class="viewport-btn" data-viewport="tablet" title="Tablet (768px)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            </button>
+            <button class="viewport-btn" data-viewport="mobile-lg" title="Mobile Grande (412px)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            </button>
+            <button class="viewport-btn" data-viewport="mobile" title="Mobile Padrão (390px)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            </button>
+            <button class="viewport-btn" data-viewport="mobile-sm" title="Mobile Pequeno (360px)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            </button>
+          </div>
+          <span id="viewport-label" class="info-badge">Desktop — 100%</span>
+        </div>
+        <div class="preview-container" id="preview-container">
+          <div class="preview-frame" id="preview-frame">
+            <iframe id="preview-iframe" sandbox="allow-same-origin" title="Preview do e-mail"></iframe>
+          </div>
+          <div id="empty-preview" class="empty-state preview-empty">
+            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <p>Cole HTML no editor para ver o preview</p>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ═══════════ MOBILE SIDEBAR TOGGLE ═══════════ -->
+  <button id="sidebar-toggle" class="sidebar-toggle" aria-label="Abrir contatos">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+  </button>
+
+  <script src="js/contacts.js"></script>
+  <script src="js/editor.js"></script>
+  <script src="js/preview.js"></script>
+  <script src="js/builder.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
