@@ -80,16 +80,45 @@ const App = (() => {
   function updateConnectionBadge(connected, message) {
     const badge = document.getElementById('connection-status');
     const text = badge?.querySelector('.status-text');
+    const infoCard = document.getElementById('smtp-info-card');
     if (!badge || !text) return;
 
     if (connected) {
       badge.classList.remove('disconnected');
       badge.classList.add('connected');
       text.textContent = message || 'SMTP conectado';
+
+      // Update info card to configured state
+      if (infoCard) {
+        infoCard.classList.add('smtp-configured');
+        const desc = infoCard.querySelector('.smtp-info-desc');
+        const link = infoCard.querySelector('.smtp-configure-link');
+        if (desc) desc.textContent = 'SMTP configurado e pronto para envio. Seus dados ficam salvos localmente no servidor.';
+        if (link) {
+          link.innerHTML = `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Alterar configuração
+          `;
+        }
+      }
     } else {
       badge.classList.remove('connected');
       badge.classList.add('disconnected');
       text.textContent = message || 'SMTP não configurado';
+
+      // Reset info card to unconfigured state
+      if (infoCard) {
+        infoCard.classList.remove('smtp-configured');
+        const desc = infoCard.querySelector('.smtp-info-desc');
+        const link = infoCard.querySelector('.smtp-configure-link');
+        if (desc) desc.textContent = 'O SMTP é o protocolo que permite o envio dos seus e-mails. Configure suas credenciais do Gmail para começar a disparar.';
+        if (link) {
+          link.innerHTML = `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Configurar agora
+          `;
+        }
+      }
     }
   }
 
@@ -114,6 +143,40 @@ const App = (() => {
           Preview.update(Editor.getHTML());
         }
       });
+    });
+  }
+
+  // ──── SMTP Setup Guide Modal ────
+  function initGuideModal() {
+    const guideModal = document.getElementById('smtp-guide-modal');
+    const smtpModal = document.getElementById('smtp-modal');
+    const guideClose = document.getElementById('guide-modal-close');
+    const guideOpenConfig = document.getElementById('guide-open-config');
+    const btnConfigureNow = document.getElementById('btn-configure-now');
+
+    // "Configurar agora" link in sidebar — opens guide if not configured, opens config modal if configured
+    btnConfigureNow?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const config = getCachedSMTP();
+      if (config?.email) {
+        // Already configured — go straight to config modal
+        document.getElementById('btn-settings')?.click();
+      } else {
+        // Not configured — open the step-by-step guide
+        guideModal?.classList.remove('hidden');
+      }
+    });
+
+    // Close guide modal
+    guideClose?.addEventListener('click', () => guideModal?.classList.add('hidden'));
+    guideModal?.addEventListener('click', (e) => {
+      if (e.target === guideModal) guideModal.classList.add('hidden');
+    });
+
+    // "Abrir Configurações SMTP" button inside guide → close guide, open config modal
+    guideOpenConfig?.addEventListener('click', () => {
+      guideModal?.classList.add('hidden');
+      document.getElementById('btn-settings')?.click();
     });
   }
 
@@ -333,6 +396,7 @@ const App = (() => {
 
     initTabs();
     initModal();
+    initGuideModal();
     initSend();
     initSidebarToggle();
 

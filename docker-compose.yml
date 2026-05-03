@@ -1,25 +1,35 @@
 version: '3.8'
 
 services:
-  mailforge-app:
-    build: .
-    # container_name: mailforge_app # Removido para evitar conflitos no Portainer
+  app:
+    # Build Local: O Portainer reconstruirá a imagem via Git a partir desta pasta
+    build:
+      context: .
+    # Nome opcional. Removido ou configurado pelo Portainer para evitar conflitos
+    # container_name: mailforge_app
+    
+    # Configuração de Portas (Ex: 8097 externa redireciona para a 3000 interna)
     ports:
-      - "8097:3000" # Porta Única (Externa 8097 -> Interna 3000)
+      - "8097:3000"
+      
+    # Rede Isolada (bridge)
     networks:
-      - mailforge_net
+      - mailforge_network
+      
+    # Persistência de Dados (Bind Mount para a pasta ./data no servidor host)
     volumes:
-      # Volume para persistir o banco de dados (dados não somem ao reiniciar)
-      - mailforge_data:/app/data
+      - ./data:/app/data
+      
+    # Variáveis de Ambiente
     environment:
       - NODE_ENV=production
-      - DB_PATH=/app/data/mailforge.db # Aponta o SQLite para a pasta do volume
+      - DB_PATH=/app/data/mailforge.db
+      - PORT=3000
+      
+    # Restart Policy
     restart: unless-stopped
 
+# Criação da Rede Interna (bridge)
 networks:
-  mailforge_net:
-    driver: bridge # Rede Interna para comunicação
-
-volumes:
-  mailforge_data:
-    name: mailforge_data # Volumes gerenciados pelo Portainer
+  mailforge_network:
+    driver: bridge
