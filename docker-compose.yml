@@ -5,7 +5,7 @@ services:
     build: .
     # container_name: mailforge_app # Removido para evitar conflitos no Portainer
     ports:
-      - "8096:3000" # Porta Única (Externa 8096 -> Interna 3000)
+      - "8097:3000" # Porta Única (Externa 8097 -> Interna 3000)
     networks:
       - mailforge_net
     volumes:
