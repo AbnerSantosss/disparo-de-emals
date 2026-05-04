@@ -10,7 +10,7 @@ const Builder = (() => {
         instagram: 'https://www.instagram.com/liderbet.br/',
         facebook: '',
         bgColor: '#1a1a2e',
-        btnColor: '#d01917'
+        btnColor: '#e03326'
     },
     geralbet: {
         localIcon: '/images/logos/icon_geralbet_branco.png',
