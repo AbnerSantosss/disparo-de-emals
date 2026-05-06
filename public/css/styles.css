@@ -1408,29 +1408,70 @@ a { text-decoration: none; color: inherit; }
 .toast.info .toast-icon { color: var(--accent-light); }
 
 /* ══════════════════════════════════════
-   MOBILE SIDEBAR TOGGLE
+   MOBILE HEADER & BACKDROP
    ══════════════════════════════════════ */
 
-.sidebar-toggle {
+.mobile-header {
   display: none;
-  position: fixed;
-  bottom: var(--sp-6);
-  left: var(--sp-6);
-  width: 48px;
-  height: 48px;
   align-items: center;
-  justify-content: center;
-  background: var(--accent-gradient);
-  color: var(--text-on-accent);
-  border-radius: 50%;
-  cursor: pointer;
-  z-index: 60;
-  box-shadow: 0 4px 20px rgba(108, 92, 231, 0.4);
-  transition: transform var(--duration-fast) var(--ease-out);
+  justify-content: space-between;
+  height: 60px;
+  padding: 0 var(--sp-4);
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  z-index: 40;
+  position: relative;
+  flex-shrink: 0;
 }
 
-.sidebar-toggle:hover {
-  transform: scale(1.08);
+.mobile-menu-btn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  margin-left: -8px;
+}
+
+.mobile-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.mobile-smtp-status {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.mobile-smtp-status .status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: none;
+}
+
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 45;
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-out);
+}
+
+.sidebar-backdrop.show {
+  opacity: 1;
 }
 
 /* ══════════════════════════════════════
@@ -1665,6 +1706,14 @@ a { text-decoration: none; color: inherit; }
    ══════════════════════════════════════ */
 
 @media (max-width: 900px) {
+  .app-layout {
+    flex-direction: column;
+  }
+
+  .mobile-header {
+    display: flex;
+  }
+
   .sidebar {
     position: fixed;
     left: 0;
@@ -1672,18 +1721,27 @@ a { text-decoration: none; color: inherit; }
     bottom: 0;
     transform: translateX(-100%);
     box-shadow: var(--shadow-lg);
+    will-change: transform;
+    z-index: 50;
   }
 
   .sidebar.open {
     transform: translateX(0);
   }
 
-  .sidebar-toggle {
-    display: flex;
+  .sidebar-backdrop {
+    display: block;
+    pointer-events: none;
+  }
+
+  .sidebar-backdrop.show {
+    pointer-events: auto;
   }
 
   .main-content {
     width: 100%;
+    flex: 1;
+    overflow: hidden;
   }
 
   .editor-toolbar {
@@ -1699,12 +1757,25 @@ a { text-decoration: none; color: inherit; }
 
 @media (max-width: 600px) {
   .tabs-nav {
-    padding: var(--sp-2) var(--sp-3) 0;
+    padding: 0;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    flex-wrap: nowrap;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tabs-nav::-webkit-scrollbar {
+    display: none;
   }
 
   .tab-btn {
-    font-size: 0.8rem;
-    padding: var(--sp-2) var(--sp-3) var(--sp-2);
+    font-size: 0.85rem;
+    padding: var(--sp-4) var(--sp-4);
+    scroll-snap-align: start;
+    white-space: nowrap;
+    min-height: 48px;
   }
 
   .editor-toolbar {
@@ -1724,6 +1795,32 @@ a { text-decoration: none; color: inherit; }
   .html-editor {
     font-size: 0.75rem;
     padding: var(--sp-3);
+  }
+
+  /* Builder Touch Targets & Layout */
+  .builder-container {
+    padding: var(--sp-4);
+    padding-bottom: calc(var(--sp-8) + env(safe-area-inset-bottom, 20px));
+  }
+
+  .form-group input, 
+  .form-select,
+  .btn,
+  .color-picker-wrapper {
+    min-height: 48px;
+  }
+
+  .color-picker-wrapper input[type="color"] {
+    width: 36px;
+    height: 36px;
+  }
+
+  .form-group.half {
+    min-width: 100%;
+  }
+
+  .builder-section {
+    padding: var(--sp-4);
   }
 }
 

@@ -81,12 +81,19 @@ const App = (() => {
     const badge = document.getElementById('connection-status');
     const text = badge?.querySelector('.status-text');
     const infoCard = document.getElementById('smtp-info-card');
+    const mobileIndicator = document.getElementById('mobile-smtp-indicator');
+
     if (!badge || !text) return;
 
     if (connected) {
       badge.classList.remove('disconnected');
       badge.classList.add('connected');
       text.textContent = message || 'SMTP conectado';
+
+      if (mobileIndicator) {
+        mobileIndicator.classList.remove('disconnected');
+        mobileIndicator.classList.add('connected');
+      }
 
       // Update info card to configured state
       if (infoCard) {
@@ -105,6 +112,11 @@ const App = (() => {
       badge.classList.remove('connected');
       badge.classList.add('disconnected');
       text.textContent = message || 'SMTP não configurado';
+
+      if (mobileIndicator) {
+        mobileIndicator.classList.remove('connected');
+        mobileIndicator.classList.add('disconnected');
+      }
 
       // Reset info card to unconfigured state
       if (infoCard) {
@@ -370,20 +382,18 @@ const App = (() => {
 
   // ──── Sidebar Mobile Toggle ────
   function initSidebarToggle() {
-    const toggle = document.getElementById('sidebar-toggle');
+    const toggle = document.getElementById('mobile-menu-btn');
     const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
 
     toggle?.addEventListener('click', () => {
       sidebar?.classList.toggle('open');
+      backdrop?.classList.toggle('show');
     });
 
-    // Close sidebar when clicking outside on mobile
-    document.addEventListener('click', (e) => {
-      if (window.innerWidth <= 900) {
-        if (!sidebar?.contains(e.target) && !toggle?.contains(e.target)) {
-          sidebar?.classList.remove('open');
-        }
-      }
+    backdrop?.addEventListener('click', () => {
+      sidebar?.classList.remove('open');
+      backdrop?.classList.remove('show');
     });
   }
 
