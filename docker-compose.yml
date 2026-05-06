@@ -8,9 +8,9 @@ services:
     # Nome opcional. Removido ou configurado pelo Portainer para evitar conflitos
     # container_name: mailforge_app
     
-    # Configuração de Portas (Ex: 8097 externa redireciona para a 3000 interna)
+    # Configuração de Portas (Ex: 8098 externa redireciona para a 3000 interna)
     ports:
-      - "8097:3000"
+      - "8098:3000"
       
     # Rede Isolada (bridge)
     networks:
