@@ -136,8 +136,9 @@ a { text-decoration: none; color: inherit; }
 
 .app-layout {
   display: flex;
-  height: 100vh;
+  height: 100dvh;
   width: 100vw;
+  overflow-x: hidden;
 }
 
 /* ──── SIDEBAR ──── */
@@ -1647,6 +1648,7 @@ a { text-decoration: none; color: inherit; }
   display: inline-block;
   width: 44px;
   height: 24px;
+  flex-shrink: 0;
 }
 .toggle-switch input {
   opacity: 0;
@@ -1821,6 +1823,11 @@ a { text-decoration: none; color: inherit; }
 
   .builder-section {
     padding: var(--sp-4);
+  }
+}
+@media (max-width: 400px) {
+  .builder-section {
+    padding: var(--sp-3);
   }
 }
 
