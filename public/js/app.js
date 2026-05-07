@@ -4,6 +4,39 @@
 
 const App = (() => {
   let cachedSMTP = null; // in-memory cache
+  let authToken = localStorage.getItem('mailforge_token') || null;
+  let currentUser = null;
+
+  // ──── Authentication ────
+  function setToken(token) {
+    authToken = token;
+    if (token) {
+      localStorage.setItem('mailforge_token', token);
+    } else {
+      localStorage.removeItem('mailforge_token');
+    }
+  }
+
+  function showLoginModal() {
+    setToken(null);
+    currentUser = null;
+    document.getElementById('login-overlay')?.classList.remove('hidden');
+  }
+
+  const originalFetch = window.fetch;
+  window.fetch = async function() {
+    let [resource, config] = arguments;
+    if (typeof resource === 'string' && resource.startsWith('/api/') && authToken) {
+      config = config || {};
+      config.headers = config.headers || {};
+      config.headers['Authorization'] = `Bearer ${authToken}`;
+    }
+    const response = await originalFetch(resource, config);
+    if (response.status === 401 && !resource.endsWith('/api/login')) {
+      showLoginModal();
+    }
+    return response;
+  };
 
   // ──── Toast Notification System ────
   function toast(message, type = 'info', duration = 4000) {
@@ -397,9 +430,148 @@ const App = (() => {
     });
   }
 
+  // ──── Auth UI ────
+  function initAuth() {
+    const loginForm = document.getElementById('login-form');
+    const loginError = document.getElementById('login-error');
+    const btnLogout = document.getElementById('btn-logout');
+
+    loginForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value.trim();
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.token) {
+          setToken(data.token);
+          currentUser = data.user;
+          document.getElementById('login-overlay').classList.add('hidden');
+          loginError.classList.add('hidden');
+          toast(`Bem-vindo, ${username}!`, 'success');
+          
+          // Show admin button if admin
+          const adminBtn = document.getElementById('btn-admin-panel');
+          if (currentUser.role === 'admin' && adminBtn) {
+            adminBtn.classList.remove('hidden');
+          } else if (adminBtn) {
+            adminBtn.classList.add('hidden');
+          }
+          
+          // Load app data
+          loadAppData();
+        } else {
+          loginError.textContent = data.error || 'Credenciais inválidas';
+          loginError.classList.remove('hidden');
+        }
+      } catch (err) {
+        loginError.textContent = 'Erro ao conectar com o servidor';
+        loginError.classList.remove('hidden');
+      }
+    });
+
+    btnLogout?.addEventListener('click', () => {
+      showLoginModal();
+      document.getElementById('login-username').value = '';
+      document.getElementById('login-password').value = '';
+    });
+  }
+
+  // ──── Admin UI ────
+  function initAdmin() {
+    const adminBtn = document.getElementById('btn-admin-panel');
+    const adminModal = document.getElementById('admin-modal');
+    const adminClose = document.getElementById('admin-modal-close');
+    const addUserForm = document.getElementById('add-user-form');
+    const userList = document.getElementById('admin-user-list');
+
+    adminBtn?.addEventListener('click', async () => {
+      adminModal.classList.remove('hidden');
+      loadUsers();
+    });
+
+    adminClose?.addEventListener('click', () => adminModal.classList.add('hidden'));
+
+    addUserForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('new-username').value.trim();
+      const password = document.getElementById('new-password').value.trim();
+      const role = document.getElementById('new-role').value;
+
+      try {
+        const res = await fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, role })
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+          toast('Usuário criado com sucesso', 'success');
+          document.getElementById('new-username').value = '';
+          document.getElementById('new-password').value = '';
+          loadUsers();
+        } else {
+          toast(data.error || 'Erro ao criar usuário', 'error');
+        }
+      } catch (err) {
+        toast('Erro de rede', 'error');
+      }
+    });
+
+    async function loadUsers() {
+      try {
+        const res = await fetch('/api/users');
+        const data = await res.json();
+        if (res.ok) {
+          userList.innerHTML = data.map(u => `
+            <li class="contact-item" style="justify-content: space-between; padding-right: 15px;">
+              <span><strong>${u.username}</strong> <span style="font-size: 0.8em; color: var(--text-secondary);">(${u.role})</span></span>
+              ${u.username !== currentUser.username ? `<div class="contact-remove" data-id="${u.id}" title="Remover"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>` : ''}
+            </li>
+          `).join('');
+
+          userList.querySelectorAll('.contact-remove').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+              const id = e.currentTarget.dataset.id;
+              if (confirm('Deletar este usuário?')) {
+                const delRes = await fetch(`/api/users/${id}`, { method: 'DELETE' });
+                if (delRes.ok) {
+                  toast('Usuário deletado', 'success');
+                  loadUsers();
+                }
+              }
+            });
+          });
+        }
+      } catch (err) {
+        console.error('Failed to load users');
+      }
+    }
+  }
+
+  // ──── Load App Data ────
+  async function loadAppData() {
+    // Refresh modules
+    Contacts.init();
+    
+    const config = await loadSMTP();
+    if (config?.email) {
+      updateConnectionBadge(true, config.email);
+    } else {
+      updateConnectionBadge(false);
+    }
+    updateSendButton();
+  }
+
   // ──── Initialize ────
   async function init() {
-    Contacts.init();
     Editor.init();
     Preview.init();
     if (typeof Builder !== 'undefined') Builder.init();
@@ -409,20 +581,42 @@ const App = (() => {
     initGuideModal();
     initSend();
     initSidebarToggle();
-
-    // Restore SMTP badge from DB
-    const config = await loadSMTP();
-    if (config?.email) {
-      updateConnectionBadge(true, config.email);
-    }
+    initAuth();
+    initAdmin();
 
     // Listen for editor changes to update send button
     document.getElementById('html-editor')?.addEventListener('input', () => {
       updateSendButton();
     });
 
-    // Initial button state
-    updateSendButton();
+    // Check if we are authenticated
+    if (!authToken) {
+      showLoginModal();
+    } else {
+      try {
+        // Simple ping to check token via SMTP config or a dedicated me endpoint
+        const res = await fetch('/api/smtp-config');
+        if (res.ok) {
+          // If we want role info, we can extract from JWT (not secure client side) or rely on /api/me if it existed.
+          // Since we don't have /api/me, let's decode JWT manually just for UI.
+          try {
+            const payload = JSON.parse(atob(authToken.split('.')[1]));
+            currentUser = { id: payload.id, username: payload.username, role: payload.role };
+            const adminBtn = document.getElementById('btn-admin-panel');
+            if (currentUser.role === 'admin' && adminBtn) {
+              adminBtn.classList.remove('hidden');
+            }
+          } catch(e) {}
+          
+          document.getElementById('login-overlay').classList.add('hidden');
+          loadAppData();
+        } else {
+          showLoginModal();
+        }
+      } catch (err) {
+        showLoginModal();
+      }
+    }
   }
 
   // Boot

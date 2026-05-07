@@ -253,6 +253,59 @@ const Builder = (() => {
 
     // Handle Form Submit
     formEl.addEventListener('submit', handleGenerate);
+
+    // Setup Image Upload
+    const btnUploadImage = document.getElementById('btn-upload-image');
+    const imageUploadInput = document.getElementById('image-upload-input');
+    const imageUploadUrl = document.getElementById('image-upload-url');
+    const btnCopyUploadUrl = document.getElementById('btn-copy-upload-url');
+
+    if (btnUploadImage && imageUploadInput) {
+      btnUploadImage.addEventListener('click', () => {
+        imageUploadInput.click();
+      });
+
+      imageUploadInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+          btnUploadImage.disabled = true;
+          btnUploadImage.textContent = 'Enviando...';
+          
+          const res = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+            // Note: Don't set Content-Type header manually for FormData, browser handles it including boundaries.
+          });
+          const data = await res.json();
+
+          if (res.ok && data.url) {
+            imageUploadUrl.value = data.url;
+            btnCopyUploadUrl.disabled = false;
+            if (window.App && window.App.toast) window.App.toast('Upload concluído!', 'success');
+          } else {
+            if (window.App && window.App.toast) window.App.toast(data.error || 'Erro no upload', 'error');
+          }
+        } catch (err) {
+          if (window.App && window.App.toast) window.App.toast('Erro ao fazer upload', 'error');
+        } finally {
+          btnUploadImage.disabled = false;
+          btnUploadImage.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Fazer Upload';
+          imageUploadInput.value = '';
+        }
+      });
+
+      btnCopyUploadUrl?.addEventListener('click', () => {
+        if (imageUploadUrl.value) {
+          navigator.clipboard.writeText(imageUploadUrl.value);
+          if (window.App && window.App.toast) window.App.toast('URL copiada para a área de transferência', 'info');
+        }
+      });
+    }
   }
 
   function applyBrandDefaults(brandId) {
